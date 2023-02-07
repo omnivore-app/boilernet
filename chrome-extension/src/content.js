@@ -41,7 +41,7 @@ async function sendDocumentRepresentation() {
         return result;
     }
     const result = _helper(document.documentElement, []);
-    chrome.runtime.sendMessage({text: "classify", documentRepresentation: result});
+    await chrome.runtime.sendMessage({text: "classify", documentRepresentation: result});
 }
 
 function injectPredictions(predictions) {

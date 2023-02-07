@@ -16,6 +16,7 @@ async function readVocab(fileName) {
 const TOKENIZER = tokenizer();
 
 chrome.runtime.onMessage.addListener(function (msg, sender, _sendResponse) {
+    console.log('background.js received msg: ' + msg.text);
     if (msg.text === 'classify') {
         classify(msg.documentRepresentation, sender.tab);
     }
@@ -56,6 +57,6 @@ async function classify(documentRepresentation, tab) {
     const tags = await readVocab('files/tags.json');
     const inputs = getInputs(documentRepresentation, words, tags);
     const predictions = await model.predict(inputs).data();
-    chrome.tabs.sendMessage(tab.id, {text: 'visualize', predictions: predictions});
-    chrome.runtime.sendMessage({text: 'enableButton'});
+    await chrome.tabs.sendMessage(tab.id, {text: 'visualize', predictions: predictions});
+    await chrome.runtime.sendMessage({text: 'enableButton'});
 }
