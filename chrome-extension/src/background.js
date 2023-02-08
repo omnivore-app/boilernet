@@ -2,7 +2,7 @@ import 'babel-polyfill';
 import * as tfjs from '@tensorflow/tfjs';
 import tokenizer from 'wink-tokenizer';
 
-function loadModel(fileName) {
+async function loadModel(fileName) {
     const url = chrome.runtime.getURL(fileName);
     return tfjs.loadLayersModel(url);
 }
@@ -15,10 +15,9 @@ async function readVocab(fileName) {
 
 const TOKENIZER = tokenizer();
 
-chrome.runtime.onMessage.addListener(function (msg, sender, _sendResponse) {
-    console.log('background.js received msg: ' + msg.text);
+chrome.runtime.onMessage.addListener(async function (msg, sender, _sendResponse) {
     if (msg.text === 'classify') {
-        classify(msg.documentRepresentation, sender.tab);
+        await classify(msg.documentRepresentation, sender.tab);
     }
 });
 

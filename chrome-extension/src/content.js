@@ -2,10 +2,9 @@ var IGNORE_TAGS = new Set(
     ['head', 'iframe', 'script', 'meta', 'link', 'style', 'input', 'checkbox', 'button', 'noscript']
 );
 
-chrome.runtime.onMessage.addListener(function (msg, _sender, _sendResponse) {
-    console.log('content.js received msg: ' + msg.text);
+chrome.runtime.onMessage.addListener(async function (msg, _sender, _sendResponse) {
     if (msg.text === 'sendDocumentRepresentation') {
-        sendDocumentRepresentation();
+        await sendDocumentRepresentation();
     } else if (msg.text === 'visualize') {
         injectPredictions(msg.predictions);
         highlightContent();
@@ -65,7 +64,6 @@ function injectPredictions(predictions) {
 function highlightContent() {
     const rule = '.boilernet_content {background-color: yellow;}';
     const css = document.createElement('style');
-    css.type = 'text/css';
     css.appendChild(document.createTextNode(rule));
     document.getElementsByTagName('head')[0].appendChild(css);
 }

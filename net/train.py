@@ -19,9 +19,10 @@ def get_dataset(dataset_file, batch_size, repeat=True):
             'doc_feature_list': tf.io.VarLenFeature(tf.int64),
             'doc_label_list': tf.io.VarLenFeature(tf.int64)
         }
-        _, seq_features = tf.io.parse_single_sequence_example(example, sequence_features=desc)
+        _, seq_features = tf.io.parse_single_sequence_example(
+            example, sequence_features=desc)
         return tf.sparse.to_dense(seq_features['doc_feature_list']), \
-               tf.sparse.to_dense(seq_features['doc_label_list'])
+            tf.sparse.to_dense(seq_features['doc_label_list'])
 
     buffer_size = 10 * batch_size
     dataset = tf.data.TFRecordDataset([dataset_file]) \
@@ -41,23 +42,31 @@ def get_class_weights(train_set_file):
     y_train = []
     for _, y in get_dataset(train_set_file, 1, False):
         y_train.extend(y.numpy().flatten())
-    class_weights = class_weight.compute_class_weight('balanced', classes=[0, 1], y=y_train)
-    return dict(zip([0, 1], class_weights))
+    return class_weight.compute_class_weight(
+        'balanced', classes=[0, 1], y=y_train)
+    # return dict(zip([0, 1], class_weights))
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('DATA_DIR', help='Directory of files produced by the preprocessing script')
-    ap.add_argument('-l', '--num_layers', type=int, default=2, help='The number of RNN layers')
+    ap.add_argument(
+        'DATA_DIR', help='Directory of files produced by the preprocessing script')
+    ap.add_argument('-l', '--num_layers', type=int, default=2,
+                    help='The number of RNN layers')
     ap.add_argument('-u', '--hidden_units', type=int, default=256,
                     help='The number of hidden LSTM units')
-    ap.add_argument('-d', '--dropout', type=float, default=0.5, help='The dropout percentage')
-    ap.add_argument('-s', '--dense_size', type=int, default=256, help='Size of the dense layer')
-    ap.add_argument('-e', '--epochs', type=int, default=20, help='The number of epochs')
-    ap.add_argument('-b', '--batch_size', type=int, default=16, help='The batch size')
+    ap.add_argument('-d', '--dropout', type=float,
+                    default=0.5, help='The dropout percentage')
+    ap.add_argument('-s', '--dense_size', type=int,
+                    default=256, help='Size of the dense layer')
+    ap.add_argument('-e', '--epochs', type=int, default=20,
+                    help='The number of epochs')
+    ap.add_argument('-b', '--batch_size', type=int,
+                    default=16, help='The batch size')
     ap.add_argument('--interval', type=int, default=5,
                     help='Calculate metrics and save the model after this many epochs')
-    ap.add_argument('--working_dir', default='train', help='Where to save checkpoints and logs')
+    ap.add_argument('--working_dir', default='train',
+                    help='Where to save checkpoints and logs')
     args = ap.parse_args()
 
     info_file = os.path.join(args.DATA_DIR, 'info.pkl')
@@ -73,7 +82,7 @@ def main():
         dev_dataset = get_dataset(dev_set_file, 1, repeat=False)
     else:
         dev_dataset = None
-    
+
     test_set_file = os.path.join(args.DATA_DIR, 'test.tfrecords')
     if os.path.isfile(test_set_file):
         test_dataset = get_dataset(test_set_file, 1, repeat=False)
@@ -87,7 +96,8 @@ def main():
               'hidden_size': args.hidden_units,
               'num_layers': args.num_layers,
               'dropout': args.dropout,
-              'dense_size': args.dense_size}
+              'dense_size': args.dense_size,
+              'class_weights': class_weights}
     clf = LeafClassifier(**kwargs)
 
     ckpt_dir = os.path.join(args.working_dir, 'ckpt')
@@ -101,7 +111,7 @@ def main():
         for arg in vars(args):
             writer.writerow([arg, getattr(args, arg)])
 
-    clf.train(train_dataset, train_steps, args.epochs, log_file, ckpt_dir, class_weights,
+    clf.train(train_dataset, train_steps, args.epochs, log_file, ckpt_dir,
               dev_dataset, info.get('num_dev_examples'),
               test_dataset, info.get('num_test_examples'),
               args.interval)

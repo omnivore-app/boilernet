@@ -119,7 +119,11 @@ venv.bak/
 .mypy_cache/
 
 googletrends-2017
-
 result
-
 train
+model
+omnivore_data
+omnivore_readability
+omnivore_train
+
+.DS_Store
