@@ -56,6 +56,6 @@ async function classify(documentRepresentation, tab) {
     const tags = await readVocab('files/tags.json');
     const inputs = getInputs(documentRepresentation, words, tags);
     const predictions = await model.predict(inputs).data();
-    await chrome.tabs.sendMessage(tab.id, {text: 'visualize', predictions: predictions});
+    await chrome.tabs.sendMessage(tab.id, {text: 'visualize', predictions});
     await chrome.runtime.sendMessage({text: 'enableButton'});
 }

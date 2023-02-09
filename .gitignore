@@ -125,5 +125,6 @@ model
 omnivore_data
 omnivore_readability
 omnivore_train
+omnivore_model
 
 .DS_Store

@@ -21,6 +21,8 @@ def get_leaves(node, tag_list=[], label=0):
     tag_list_new = tag_list + [node.name]
     if node.has_attr('__boilernet_label'):
         label = int(node['__boilernet_label'])
+        if node.name is not None and node.name == 'img':
+            return [(node, tag_list_new, label)]
 
     result = []
     for c in node.children:
@@ -51,7 +53,8 @@ def process(doc, tags, words):
     """
     result = []
     for leaf, tag_list, is_content in get_leaves(doc.find_all('html')[0]):
-        leaf_representation = get_leaf_representation(leaf, tag_list, is_content)
+        leaf_representation = get_leaf_representation(
+            leaf, tag_list, is_content)
         result.append(leaf_representation)
         words_dict, tags_dict, _ = leaf_representation
         for word, count in words_dict.items():
@@ -117,7 +120,8 @@ def get_doc_inputs(docs, word_map, tag_map):
         doc_features = []
         doc_labels = []
         for words_dict, tags_dict, label in doc:
-            feature_vector = get_feature_vector(words_dict, tags_dict, word_map, tag_map)
+            feature_vector = get_feature_vector(
+                words_dict, tags_dict, word_map, tag_map)
             doc_features.append(_int64_feature(feature_vector))
             doc_labels.append(_int64_feature([label]))
         doc_feature_list = tf.train.FeatureList(feature=doc_features)
@@ -129,7 +133,8 @@ def write_tfrecords(filename, dataset, word_map, tag_map):
     """Write the dataset to a .tfrecords file."""
     with tf.io.TFRecordWriter(filename) as writer:
         for doc_feature_list, doc_label_list in get_doc_inputs(dataset, word_map, tag_map):
-            f = {'doc_feature_list': doc_feature_list, 'doc_label_list': doc_label_list}
+            f = {'doc_feature_list': doc_feature_list,
+                 'doc_label_list': doc_label_list}
             feature_lists = tf.train.FeatureLists(feature_list=f)
             example = tf.train.SequenceExample(feature_lists=feature_lists)
             writer.write(example.SerializeToString())
@@ -179,11 +184,16 @@ def read_file(f_name):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('DIRS', nargs='+', help='A list of directories containing the HTML files')
-    ap.add_argument('-s', '--split_dir', help='Directory that contains train-/dev-/testset split')
-    ap.add_argument('-w', '--num_words', type=int, help='Only use the top-k words')
-    ap.add_argument('-t', '--num_tags', type=int, help='Only use the top-l HTML tags')
-    ap.add_argument('--save', default='result', help='Where to save the results')
+    ap.add_argument('DIRS', nargs='+',
+                    help='A list of directories containing the HTML files')
+    ap.add_argument('-s', '--split_dir',
+                    help='Directory that contains train-/dev-/testset split')
+    ap.add_argument('-w', '--num_words', type=int,
+                    help='Only use the top-k words')
+    ap.add_argument('-t', '--num_tags', type=int,
+                    help='Only use the top-l HTML tags')
+    ap.add_argument('--save', default='result',
+                    help='Where to save the results')
     args = ap.parse_args()
 
     # files required for tokenization

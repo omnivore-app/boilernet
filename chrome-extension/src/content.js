@@ -33,6 +33,11 @@ async function sendDocumentRepresentation() {
                     // we use this later to show the results in the browser
                     wrap(c, leafIndex++);
                 }
+            } else if (c.nodeName === 'img') {
+                const src = c.getAttribute('src');
+                if (src) {
+                    result.push({text: src, tags: tagListNew});
+                }
             } else if (!IGNORE_TAGS.has(c.nodeName.toLowerCase())) {
                 result.push(..._helper(c, tagListNew));
             }

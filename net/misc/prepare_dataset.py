@@ -32,6 +32,15 @@ def process_other(source, expected):
                 source_node.parent['__boilernet_is_content'] = True
                 break
 
+    source_images = source.find_all('img')
+    expected_images = expected.find_all('img')
+    for source_image in source_images:
+        if source_image.has_attr('src'):
+            for expected_image in expected_images:
+                if expected_image.has_attr('src') and source_image['src'] == expected_image['src']:
+                    source_image['__boilernet_is_content'] = True
+                    break
+
 
 def get_text_nodes(node):
     """Return all Text nodes in a BS4 tree."""
@@ -57,7 +66,7 @@ def process_gn1(doc):
 
 def remove_comments(doc):
     """Remove all comments from "doc"."""
-    for node in doc.find_all(text=lambda x: isinstance(x, Comment)):
+    for node in doc.find_all(string=lambda x: isinstance(x, Comment)):
         node.extract()
 
 
@@ -87,6 +96,8 @@ def get_leaves(node, is_content=False):
     if node.has_attr('__boilernet_is_content'):
         is_content = True
         del node['__boilernet_is_content']
+        if node.name is not None and node.name == 'img':
+            return [(node, True)]
 
     result = []
     for c in node.children:
@@ -121,15 +132,12 @@ def main():
     expected = util.get_filenames(args.EXPECTED, '.html')
     for f in source:
         try:
-            # if not f.endswith('gt_1.html'):
-            #     i += 1
-            #     continue
             with open(f, 'rb') as hfile:
                 doc = BeautifulSoup(
-                    hfile, features='html5lib', from_encoding='utf-8')
+                    hfile, 'html5lib', from_encoding='utf-8')
             with open(expected[i], 'rb') as hfile:
                 doc2 = BeautifulSoup(
-                    hfile, features='html5lib', from_encoding='utf-8')
+                    hfile, 'html5lib', from_encoding='utf-8')
             # # for some reason, parsing malformed HTML twice works better
             # doc2 = BeautifulSoup(doc.prettify(), features='html5lib')
             process(doc, doc2, dataset_functions[args.DATASET])
@@ -140,7 +148,8 @@ def main():
                 hfile.write(doc.prettify())
 
             i += 1
-        except:
+        except Exception as e:
+            print(e)
             tqdm.write('error processing {}'.format(f))
 
 
